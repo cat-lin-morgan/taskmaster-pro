@@ -47,7 +47,7 @@ var saveTasks = function() {
 };
 
 //these are anonymous functions
-
+//this is editing the text area
 $(".list-group").on("click", "p", function() {
   var text = $(this)
     .text()
@@ -85,6 +85,47 @@ $(".list-group").on("click", "p", function() {
     $(this).replaceWith(taskP);
   });
 });
+
+//this is editing the due date
+$(".list-group").on("click", "span", function(){
+  //gets current text
+  var date = $(this)
+    .text()
+    .trim();
+  //creates new input element
+  var dateInput = $("<input>")
+    .attr("type", "text")
+    .addClass("form-contol")
+    .val(date);
+    //swap out elements
+  $(this).replaceWith(dateInput);
+
+  //automatically focus on new element
+  dateInput.trigger("focus");
+
+  $(".list-group").on("blur", "input[type='text']", function() {
+    //get current text
+    var date = $(this)
+      .val()
+      .trim();
+    //get the parents ul's id attribute
+    var status = $(this)
+      .closest(".list-group")
+      .attr("id")
+      .replace("list-", "");
+    //get the task's position in the list of other li elements
+    var index =$(this)
+      .closest(".list-group-item")
+      .index();
+    //recreate span element with bootstrap classes
+    var taskSpan = $("<span>")
+      .addClass("badge badge-primary badge-pill")
+      .text(date);
+    //replace input with span element
+    $(this).replaceWith(taskSpan);
+  });
+});
+
 
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function() {
