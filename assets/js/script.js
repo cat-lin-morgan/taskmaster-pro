@@ -30,23 +30,61 @@ var loadTasks = function() {
       done: []
     };
   }
-
-  // loop over object properties
-  $.each(tasks, function(list, arr) {
-    console.log(list, arr);
-    // then loop over sub-array
-    arr.forEach(function(task) {
-      createTask(task.text, task.date, list);
-    });
-  });
 };
+
+// loop over object properties
+$.each(tasks, function(list, arr) {
+  console.log(list, arr);
+  // then loop over sub-array
+  arr.forEach(function(task) {
+    createTask(task.text, task.date, list);
+  });
+});
+
 
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+//these are anonymous functions
 
+$(".list-group").on("click", "p", function() {
+  var text = $(this)
+    .text()
+    .trim();
 
+  var textInput = $("<textarea>")
+    .addClass("form-control")
+    .val(text);
+
+  $(this).replaceWith(textInput);
+
+  textInput.trigger("focus");
+
+  $(".list-group").on("blur", "textarea", function() {
+    //get text area's current value and text
+    var text = $(this)
+      .val()
+      .trim();
+    //get parents ul's id attribute
+    var status = $(this)
+      .closest(".list-group")
+      .attr("id")
+      .replace("list-", "");
+    //get the task's position in the list of other li elements
+    var index = $(this)
+      .closest(".list-group-item")
+      .index();
+    tasks[status][index].text = text;
+    saveTasks();
+    //remake p element
+    var taskP = $("<p>")
+      .addClass("m-1")
+      .text(text);
+    //replace text with p element
+    $(this).replaceWith(taskP);
+  });
+});
 
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function() {
@@ -77,7 +115,6 @@ $("#task-form-modal .btn-primary").click(function() {
       text: taskText,
       date: taskDate
     });
-
     saveTasks();
   }
 });
@@ -95,3 +132,35 @@ $("#remove-tasks").on("click", function() {
 loadTasks();
 
 
+
+//these same
+
+// document.querySelector("#wrapper").addEventListener("click", function(event) {
+//   if (event.target.matches(".task")) {
+//     console.log("dynamic task was clicked");
+//   }
+//  });
+
+// var clickHandler = function(event) {
+//   if (event.target.matches(".task")) {
+//     console.log("dynamic task was clicked");
+//   }
+// }
+// var el = document.querySelector("#wrapper");
+// el.addEventListener("click", clickHandler);
+
+
+
+
+//josh example 2
+// var todo={
+//   tasks: [],
+//   addTodo: function(todothing){
+//     this.tasks.push(todothing);
+//   },
+//   listTodo: function(){
+//     for(i=0; i<this.tasks.length; i++){
+//       console.log( this.tasks[i]);
+//     }
+//   }
+// }
