@@ -277,7 +277,6 @@ var auditTask = function(taskEl) {
   } else if (Math.abs(moment().diff(time, "days")) <= 2) {
     $(taskEl).addClass("list-group-item-warning");
   }
-  console.log(taskEl);
 };
 //timer function
 setInterval(function() {
@@ -310,7 +309,7 @@ loadTasks();
 
 
 
-//josh example 2
+//example 2
 // var todo={
 //   tasks: [],
 //   addTodo: function(todothing){
