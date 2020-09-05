@@ -13,6 +13,8 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+    //check due date
+    auditTask(taskLi);
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -30,10 +32,8 @@ var loadTasks = function() {
       done: []
     };
   }
-
   // loop over object properties
   $.each(tasks, function(list, arr) {
-    console.log(list, arr);
     // then loop over sub-array
     arr.forEach(function(task) {
       createTask(task.text, task.date, list);
@@ -41,13 +41,106 @@ var loadTasks = function() {
   });
 };
 
+
+
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+//these are anonymous functions
+//this is editing the text area
+$(".list-group").on("click", "p", function() {
+  var text = $(this)
+    .text()
+    .trim();
 
+  var textInput = $("<textarea>")
+    .addClass("form-control")
+    .val(text);
 
+  $(this).replaceWith(textInput);
 
+  textInput.trigger("focus");
+
+});
+
+$(".list-group").on("blur", "textarea", function() {
+  //get text area's current value and text
+  var text = $(this)
+    .val()
+    .trim();
+  //get parents ul's id attribute
+  var status = $(this)
+    .closest(".list-group")
+    .attr("id")
+    .replace("list-", "");
+  //get the task's position in the list of other li elements
+  var index = $(this)
+    .closest(".list-group-item")
+    .index();
+  tasks[status][index].text = text;
+  saveTasks();
+  //remake p element
+  var taskP = $("<p>")
+    .addClass("m-1")
+    .text(text);
+  //replace text with p element
+  $(this).replaceWith(taskP);
+});
+
+//this is editing the due date
+$(".list-group").on("click", "span", function(){
+  //gets current text
+  var date = $(this)
+  .text()
+  .trim();
+  //creates new input element
+  var dateInput = $("<input>")
+    .attr("type", "text")
+    .addClass("form-contol")
+    .val(date);
+    //swap out elements
+  $(this).replaceWith(dateInput);
+
+  //enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate:1,
+    onClose: function() {
+      //when calendar is closed, force a "change" event on the dataInput
+      $(this).trigger("change");
+    }
+  });
+
+  //automatically focus on new element
+  dateInput.trigger("focus");
+});
+
+$(".list-group").on("change", "input[type='text']", function() {
+  //get current text
+  var date = $(this)
+    .val()
+    .trim();
+    //get the parents ul's id attribute
+  var status = $(this)
+    .closest(".list-group")
+    .attr("id")
+    .replace("list-", "");
+  //get the task's position in the list of other li elements
+  var index =$(this)
+    .closest(".list-group-item")
+    .index();
+  tasks[status][index].date = date;
+  saveTasks();
+  //recreate span element with bootstrap classes
+  var taskSpan = $("<span>")
+    .addClass("badge badge-primary badge-pill")
+    .text(date);
+  //replace input with span element
+  $(this).replaceWith(taskSpan);
+  //pass task li elelment into auditTask to check new due date
+  auditTask($(taskSpan).closest(".list-group-item"));
+});
+  
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function() {
   // clear values
@@ -61,25 +154,100 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
-
+  
   if (taskText && taskDate) {
     createTask(taskText, taskDate, "toDo");
 
     // close modal
     $("#task-form-modal").modal("hide");
-
+    
     // save in tasks array
     tasks.toDo.push({
       text: taskText,
       date: taskDate
     });
-
     saveTasks();
   }
+});
+
+//drag and drop stuff
+
+//card sorting
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group"),
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  activate: function(event, ui) {
+    // use jquery to slect this and add class of dropover
+    $(this).addClass("dropover");
+    //use jqery to select bottom-trash and add bottom-trash-drag class
+    $(".bottom-trash").addClass("bottom-trash-drag");
+  },
+  deactivate: function(event, ui) {
+    // use jquery to select this and remove the class of dropover
+    $(this).removeClass("dropover");
+    //use jqery to select bottom trash and remove bottom trash active
+    $(".bottom-trash").removeClass("bottom-trash-drag");
+  },
+  over: function(event) {
+    // use jquery to select event.target and add class of dropover-active
+    $(event.target).addClass("dropover-active");
+  }, 
+  out: function(event) {
+    // use jquery to select event.target and remove dropover-active from it
+    $(event.target).removeClass("dropover-active");
+  },
+  update: function(event) {
+    //array to store task data
+    var tempArr = [];
+    //looping thru current children
+    $(this).children().each(function () {
+      var text = $(this)
+        .find("p")
+        .text()
+        .trim();
+      var date = $(this)
+        .find("span")
+        .text()
+        .trim();
+      //add task data to temp array as an object
+      tempArr.push({
+        text: text,
+        date: date
+      });
+    });
+    //this will trim down the list's ID to match the object property
+    var arrName = $(this)
+      .attr("id")
+      .replace("list-", "");
+    //update array on tasks object and save
+    tasks[arrName] = tempArr;
+    saveTasks();
+  }
+});
+
+//drop into trash
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function(event, ui) {
+    ui.draggable.remove();
+    //select bottom trash and remove bottom trash active class
+    $(".bottom-trash").removeClass("bottom-trash-active");
+  },
+  over: function(event, ui) {
+    //select bottom trash and add bottom trah active to it
+    $(".bottom-trash").addClass("bottom-trash-active");
+
+  },
+  out: function(event, ui) {
+    //select bottom trash and remove bottom trash active class
+    $(".bottom-trash").removeClass("bottom-trash-active");  }
 });
 
 // remove all tasks
@@ -91,7 +259,65 @@ $("#remove-tasks").on("click", function() {
   saveTasks();
 });
 
+//changing the date with moment and jqery
+$("#modalDueDate").datepicker({
+  minDate: 1
+});
+
+var auditTask = function(taskEl) {
+  //get date from task elemnt
+  var date = $(taskEl).find("span").text().trim();
+  //convert to moment object
+  var time = moment(date, "L").set("hour", 17);
+  //remove old classes from elements
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+  //apply new class if task is near/over due date
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  } else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
+};
+//timer function
+setInterval(function() {
+  $(".card .list-group-item").each(function(el) {
+    auditTask(el);
+  });
+}, (1000 * 60) * 30);
+
 // load tasks for the first time
 loadTasks();
 
 
+
+//these same
+
+// document.querySelector("#wrapper").addEventListener("click", function(event) {
+  //   if (event.target.matches(".task")) {
+    //     console.log("dynamic task was clicked");
+//   }
+//  });
+
+// var clickHandler = function(event) {
+  //   if (event.target.matches(".task")) {
+//     console.log("dynamic task was clicked");
+//   }
+// }
+// var el = document.querySelector("#wrapper");
+// el.addEventListener("click", clickHandler);
+
+
+
+
+//example 2
+// var todo={
+//   tasks: [],
+//   addTodo: function(todothing){
+//     this.tasks.push(todothing);
+//   },
+//   listTodo: function(){
+//     for(i=0; i<this.tasks.length; i++){
+//       console.log( this.tasks[i]);
+//     }
+//   }
+// }
