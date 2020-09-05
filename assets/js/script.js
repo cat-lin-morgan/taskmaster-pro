@@ -183,16 +183,20 @@ $(".card .list-group").sortable({
   tolerance: "pointer",
   helper: "clone",
   activate: function(event) {
-    // console.log("activate", this);
+    // use jquery to slect this and add class of dropover
+    $(this).addClass("dropover");
   },
   deactivate: function(event) {
-    // console.log("deactivate", this);
+    // use jquery to select this and remove the class of dropover
+    $(this).removeClass("dropover");
   },
   over: function(event) {
-    // console.log("over", event.target);
+    // use jquery to select event.target and add class of dropover-active
+    $(event.target).addClass("dropover-active")
   }, 
   out: function(event) {
-    // console.log("out", event.target);
+    // use jquery to select event.target and remove dropover-active from it
+    $(event.target).removeClass("")
   },
   update: function(event) {
     //array to store task data
@@ -265,7 +269,14 @@ var auditTask = function(taskEl) {
   } else if (Math.abs(moment().diff(time, "days")) <= 2) {
     $(taskEl).addClass("list-group-item-warning");
   }
+  console.log(taskEl);
 };
+//timer function
+setInterval(function() {
+  $(".card .list-group-item").each(function(el) {
+    auditTask(el);
+  });
+}, (1000 * 60) * 30);
 
 // load tasks for the first time
 loadTasks();
