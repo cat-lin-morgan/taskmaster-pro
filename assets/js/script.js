@@ -104,7 +104,7 @@ $(".list-group").on("click", "span", function(){
 
   //enable jquery ui datepicker
   dateInput.datepicker({
-    // minDate:1,
+    minDate:1,
     onClose: function() {
       //when calendar is closed, force a "change" event on the dataInput
       $(this).trigger("change");
@@ -154,7 +154,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -182,21 +182,25 @@ $(".card .list-group").sortable({
   scroll: false,
   tolerance: "pointer",
   helper: "clone",
-  activate: function(event) {
+  activate: function(event, ui) {
     // use jquery to slect this and add class of dropover
     $(this).addClass("dropover");
+    //use jqery to select bottom-trash and add bottom-trash-drag class
+    $(".bottom-trash").addClass("bottom-trash-drag");
   },
-  deactivate: function(event) {
+  deactivate: function(event, ui) {
     // use jquery to select this and remove the class of dropover
     $(this).removeClass("dropover");
+    //use jqery to select bottom trash and remove bottom trash active
+    $(".bottom-trash").removeClass("bottom-trash-drag");
   },
   over: function(event) {
     // use jquery to select event.target and add class of dropover-active
-    $(event.target).addClass("dropover-active")
+    $(event.target).addClass("dropover-active");
   }, 
   out: function(event) {
     // use jquery to select event.target and remove dropover-active from it
-    $(event.target).removeClass("")
+    $(event.target).removeClass("dropover-active");
   },
   update: function(event) {
     //array to store task data
@@ -233,13 +237,17 @@ $("#trash").droppable({
   tolerance: "touch",
   drop: function(event, ui) {
     ui.draggable.remove();
+    //select bottom trash and remove bottom trash active class
+    $(".bottom-trash").removeClass("bottom-trash-active");
   },
   over: function(event, ui) {
-    // console.log("over");
+    //select bottom trash and add bottom trah active to it
+    $(".bottom-trash").addClass("bottom-trash-active");
+
   },
   out: function(event, ui) {
-    // console.log("out");
-  }
+    //select bottom trash and remove bottom trash active class
+    $(".bottom-trash").removeClass("bottom-trash-active");  }
 });
 
 // remove all tasks
@@ -253,7 +261,7 @@ $("#remove-tasks").on("click", function() {
 
 //changing the date with moment and jqery
 $("#modalDueDate").datepicker({
-  // minDate: 1
+  minDate: 1
 });
 
 var auditTask = function(taskEl) {
